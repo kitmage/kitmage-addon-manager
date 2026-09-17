@@ -1,24 +1,25 @@
 <?php
 /**
- * Plugin Name: Aspen Add-on Manager
+ * Plugin Name: Kitmage Add-on Manager
  * Description: Allows WooCommerce Memberships restricted add-on products to be purchased when a matching membership product is already in the cart.
  * Version: 1.0.3
- * Author: Aspen Grove
+ * Author: Mike@KitMage
+ * Author URI: http://kitmage.com
  * Requires Plugins: woocommerce
- * Text Domain: aspen-addon-manager
+ * Text Domain: kitmage-addon-manager
  *
- * @package AspenAddonManager
+ * @package KitmageAddonManager
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-final class Aspen_Addon_Manager {
-	const OPTION_NAME   = 'aspen_addon_manager_rules';
-	const DEBUG_OPTION  = 'aspen_addon_manager_debug';
-	const NONCE_NAME  = 'aspen_addon_manager_save_rules';
-	const NONCE_FIELD = 'aspen_addon_manager_nonce';
+final class Kitmage_Addon_Manager {
+	const OPTION_NAME   = 'kitmage_addon_manager_rules';
+	const DEBUG_OPTION  = 'kitmage_addon_manager_debug';
+	const NONCE_NAME  = 'kitmage_addon_manager_save_rules';
+	const NONCE_FIELD = 'kitmage_addon_manager_nonce';
 
 	private static $instance = null;
 	private $eligible_cache  = array();
@@ -49,21 +50,21 @@ final class Aspen_Addon_Manager {
 	public function add_admin_menu() {
 		add_submenu_page(
 			'woocommerce',
-			__( 'Add-on Manager', 'aspen-addon-manager' ),
-			__( 'Add-on Manager', 'aspen-addon-manager' ),
+			__( 'Add-on Manager', 'kitmage-addon-manager' ),
+			__( 'Add-on Manager', 'kitmage-addon-manager' ),
 			'manage_woocommerce',
-			'aspen-addon-manager',
+			'kitmage-addon-manager',
 			array( $this, 'render_settings_page' )
 		);
 	}
 
 	public function handle_settings_save() {
-		if ( empty( $_POST['aspen_addon_manager_action'] ) || 'save_rules' !== $_POST['aspen_addon_manager_action'] ) {
+		if ( empty( $_POST['kitmage_addon_manager_action'] ) || 'save_rules' !== $_POST['kitmage_addon_manager_action'] ) {
 			return;
 		}
 
 		if ( ! current_user_can( 'manage_woocommerce' ) ) {
-			wp_die( esc_html__( 'You do not have permission to manage add-on rules.', 'aspen-addon-manager' ) );
+			wp_die( esc_html__( 'You do not have permission to manage add-on rules.', 'kitmage-addon-manager' ) );
 		}
 
 		check_admin_referer( self::NONCE_NAME, self::NONCE_FIELD );
@@ -72,7 +73,7 @@ final class Aspen_Addon_Manager {
 		update_option( self::OPTION_NAME, $this->sanitize_rules( $rules ) );
 		update_option( self::DEBUG_OPTION, ! empty( $_POST['debug_enabled'] ) ? 'yes' : 'no' );
 
-		wp_safe_redirect( add_query_arg( array( 'page' => 'aspen-addon-manager', 'updated' => 'true' ), admin_url( 'admin.php' ) ) );
+		wp_safe_redirect( add_query_arg( array( 'page' => 'kitmage-addon-manager', 'updated' => 'true' ), admin_url( 'admin.php' ) ) );
 		exit;
 	}
 
@@ -82,36 +83,36 @@ final class Aspen_Addon_Manager {
 		$tags          = get_terms( array( 'taxonomy' => 'product_tag', 'hide_empty' => false ) );
 		?>
 		<div class="wrap">
-			<h1><?php esc_html_e( 'Add-on Manager', 'aspen-addon-manager' ); ?></h1>
+			<h1><?php esc_html_e( 'Add-on Manager', 'kitmage-addon-manager' ); ?></h1>
 			<?php if ( isset( $_GET['updated'] ) ) : ?>
-				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Rules saved.', 'aspen-addon-manager' ); ?></p></div>
+				<div class="notice notice-success is-dismissible"><p><?php esc_html_e( 'Rules saved.', 'kitmage-addon-manager' ); ?></p></div>
 			<?php endif; ?>
-			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=aspen-addon-manager' ) ); ?>">
+			<form method="post" action="<?php echo esc_url( admin_url( 'admin.php?page=kitmage-addon-manager' ) ); ?>">
 				<?php wp_nonce_field( self::NONCE_NAME, self::NONCE_FIELD ); ?>
-				<input type="hidden" name="aspen_addon_manager_action" value="save_rules" />
-				<table class="widefat striped" id="aspen-addon-manager-rules">
-					<thead><tr><th><?php esc_html_e( 'Restricted add-on product tag', 'aspen-addon-manager' ); ?></th><th><?php esc_html_e( 'Qualifying product IDs', 'aspen-addon-manager' ); ?></th><th><?php esc_html_e( 'Restriction message HTML', 'aspen-addon-manager' ); ?></th><th></th></tr></thead>
+				<input type="hidden" name="kitmage_addon_manager_action" value="save_rules" />
+				<table class="widefat striped" id="kitmage-addon-manager-rules">
+					<thead><tr><th><?php esc_html_e( 'Restricted add-on product tag', 'kitmage-addon-manager' ); ?></th><th><?php esc_html_e( 'Qualifying product IDs', 'kitmage-addon-manager' ); ?></th><th><?php esc_html_e( 'Restriction message HTML', 'kitmage-addon-manager' ); ?></th><th></th></tr></thead>
 					<tbody>
 					<?php foreach ( array_values( $rules ? $rules : array( array() ) ) as $index => $rule ) : ?>
 						<?php $this->render_rule_row( $index, $rule, $tags ); ?>
 					<?php endforeach; ?>
 					</tbody>
 				</table>
-				<p><label><input type="checkbox" name="debug_enabled" value="1" <?php checked( $debug_enabled ); ?> /> <?php esc_html_e( 'Enable debug logging to WooCommerce > Status > Logs', 'aspen-addon-manager' ); ?></label></p>
-				<p><button type="button" class="button" id="aspen-add-rule"><?php esc_html_e( 'Add Rule', 'aspen-addon-manager' ); ?></button></p>
-				<?php submit_button( __( 'Save Rules', 'aspen-addon-manager' ) ); ?>
+				<p><label><input type="checkbox" name="debug_enabled" value="1" <?php checked( $debug_enabled ); ?> /> <?php esc_html_e( 'Enable debug logging to WooCommerce > Status > Logs', 'kitmage-addon-manager' ); ?></label></p>
+				<p><button type="button" class="button" id="kitmage-add-rule"><?php esc_html_e( 'Add Rule', 'kitmage-addon-manager' ); ?></button></p>
+				<?php submit_button( __( 'Save Rules', 'kitmage-addon-manager' ) ); ?>
 			</form>
 		</div>
 		<script>
 			(function(){
-				const table = document.querySelector('#aspen-addon-manager-rules tbody');
-				document.querySelector('#aspen-add-rule').addEventListener('click', function(){
+				const table = document.querySelector('#kitmage-addon-manager-rules tbody');
+				document.querySelector('#kitmage-add-rule').addEventListener('click', function(){
 					const row = table.querySelector('tr').cloneNode(true);
 					const index = table.querySelectorAll('tr').length;
 					row.querySelectorAll('select,input,textarea').forEach(function(field){ field.name = field.name.replace(/rules\[[0-9]+\]/, 'rules[' + index + ']'); field.value = ''; });
 					table.appendChild(row);
 				});
-				table.addEventListener('click', function(event){ if (event.target.classList.contains('aspen-remove-rule') && table.querySelectorAll('tr').length > 1) { event.target.closest('tr').remove(); } });
+				table.addEventListener('click', function(event){ if (event.target.classList.contains('kitmage-remove-rule') && table.querySelectorAll('tr').length > 1) { event.target.closest('tr').remove(); } });
 			}());
 		</script>
 		<?php
@@ -123,10 +124,10 @@ final class Aspen_Addon_Manager {
 		$message     = isset( $rule['message'] ) ? $rule['message'] : '';
 		?>
 		<tr>
-			<td><select name="rules[<?php echo esc_attr( $index ); ?>][tag_id]"><option value=""><?php esc_html_e( 'Select a tag', 'aspen-addon-manager' ); ?></option><?php foreach ( $tags as $tag ) : ?><option value="<?php echo esc_attr( $tag->term_id ); ?>" <?php selected( $tag_id, $tag->term_id ); ?>><?php echo esc_html( $tag->name ); ?></option><?php endforeach; ?></select></td>
+			<td><select name="rules[<?php echo esc_attr( $index ); ?>][tag_id]"><option value=""><?php esc_html_e( 'Select a tag', 'kitmage-addon-manager' ); ?></option><?php foreach ( $tags as $tag ) : ?><option value="<?php echo esc_attr( $tag->term_id ); ?>" <?php selected( $tag_id, $tag->term_id ); ?>><?php echo esc_html( $tag->name ); ?></option><?php endforeach; ?></select></td>
 			<td><input class="regular-text" type="text" name="rules[<?php echo esc_attr( $index ); ?>][product_ids]" value="<?php echo esc_attr( $product_ids ); ?>" placeholder="123, 456" /></td>
 			<td><textarea class="large-text" rows="3" name="rules[<?php echo esc_attr( $index ); ?>][message]"><?php echo esc_textarea( $message ); ?></textarea></td>
-			<td><button type="button" class="button aspen-remove-rule"><?php esc_html_e( 'Remove', 'aspen-addon-manager' ); ?></button></td>
+			<td><button type="button" class="button kitmage-remove-rule"><?php esc_html_e( 'Remove', 'kitmage-addon-manager' ); ?></button></td>
 		</tr>
 		<?php
 	}
@@ -226,7 +227,7 @@ final class Aspen_Addon_Manager {
 		$is_eligible = $this->is_eligible_for_cart_based_access( $product_id );
 
 		if ( $this->is_memberships_purchase_restricted( $product_id ) && $this->product_has_matching_rule( $product_id ) && ! $is_eligible && ! $this->memberships_allows_purchase( $product_id ) ) {
-			$content .= '<div class="aspen-addon-manager-restriction-message">' . wp_kses_post( $this->get_message_for_product( $product_id ) ) . '</div>';
+			$content .= '<div class="kitmage-addon-manager-restriction-message">' . wp_kses_post( $this->get_message_for_product( $product_id ) ) . '</div>';
 		}
 
 		return $content;
@@ -364,7 +365,7 @@ final class Aspen_Addon_Manager {
 			}
 		}
 
-		return __( 'This add-on requires a qualifying membership product in your cart.', 'aspen-addon-manager' );
+		return __( 'This add-on requires a qualifying membership product in your cart.', 'kitmage-addon-manager' );
 	}
 
 	private function get_matching_rules( $product_id ) {
@@ -409,12 +410,12 @@ final class Aspen_Addon_Manager {
 		}
 
 		if ( function_exists( 'wc_get_logger' ) ) {
-			wc_get_logger()->debug( $message . ' ' . wp_json_encode( $context ), array( 'source' => 'aspen-addon-manager' ) );
+			wc_get_logger()->debug( $message . ' ' . wp_json_encode( $context ), array( 'source' => 'kitmage-addon-manager' ) );
 			return;
 		}
 
 		if ( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
-			error_log( 'Aspen Add-on Manager: ' . $message . ' ' . wp_json_encode( $context ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
+			error_log( 'Kitmage Add-on Manager: ' . $message . ' ' . wp_json_encode( $context ) ); // phpcs:ignore WordPress.PHP.DevelopmentFunctions.error_log_error_log
 		}
 	}
 
@@ -443,4 +444,4 @@ final class Aspen_Addon_Manager {
 	}
 }
 
-add_action( 'plugins_loaded', array( 'Aspen_Addon_Manager', 'instance' ) );
+add_action( 'plugins_loaded', array( 'Kitmage_Addon_Manager', 'instance' ) );
