@@ -47,14 +47,6 @@ cart request. Existing Memberships access continues to work normally.
 4. Activate **Kitmage Add-on Manager** from the WordPress Plugins screen.
 5. Configure the first rule under **WooCommerce > Add-on Manager**.
 
-### Upgrading from Aspen Add-on Manager
-
-The Kitmage release uses new option names, so an existing Aspen configuration
-must be migrated. Back up the database, deactivate the Aspen plugin, and follow
-[`migration-instructions.md`](migration-instructions.md) before activating this
-plugin. The migration document includes the SQL statements, custom table-prefix
-guidance, a verification query, and duplicate-key recovery guidance.
-
 ## Configuration
 
 ### 1. Prepare the restricted add-on
@@ -155,12 +147,6 @@ products and includes a fallback for simple products, subscriptions, and the
 Elementor WooCommerce add-to-cart widget. If a custom theme or builder still
 hides the button, test with a standard WooCommerce-compatible theme and inspect
 the debug log for fallback entries.
-
-### Settings disappeared after upgrading from Aspen
-
-Do not recreate the rules until checking the database. Follow
-[`migration-instructions.md`](migration-instructions.md) to rename the two Aspen
-options and verify the resulting Kitmage records.
 
 ### Logs do not appear
 
