@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Kitmage Add-on Manager
  * Description: Allows WooCommerce Memberships restricted add-on products to be purchased when a matching membership product is already in the cart.
- * Version: 1.0.3
+ * Version: 1.0.4
  * Author: Mike@KitMage
  * Author URI: http://kitmage.com
  * Requires Plugins: woocommerce
@@ -171,6 +171,10 @@ final class Kitmage_Addon_Manager {
 	public function prepare_single_product_add_to_cart() {
 		global $product;
 
+		if ( $this->tagmonster_suppresses_product_form( $product ) ) {
+			return;
+		}
+
 		if ( is_a( $product, 'WC_Product' ) && $this->is_eligible_for_cart_based_access( $product ) ) {
 			remove_action( 'woocommerce_single_product_summary', 'woocommerce_template_single_add_to_cart', 30 );
 		}
@@ -178,6 +182,10 @@ final class Kitmage_Addon_Manager {
 
 	public function maybe_render_add_to_cart() {
 		global $product;
+
+		if ( $this->tagmonster_suppresses_product_form( $product ) ) {
+			return;
+		}
 
 		if ( ! is_a( $product, 'WC_Product' ) || ! $this->is_eligible_for_cart_based_access( $product ) ) {
 			return;
@@ -202,6 +210,10 @@ final class Kitmage_Addon_Manager {
 		}
 
 		global $product;
+
+		if ( $this->tagmonster_suppresses_product_form( $product ) ) {
+			return $content;
+		}
 
 		if ( ! is_a( $product, 'WC_Product' ) || ! $this->is_eligible_for_cart_based_access( $product ) || false !== strpos( $content, 'single_add_to_cart_button' ) ) {
 			$this->debug_log( 'Elementor add-to-cart fallback skipped.', array( 'product_id' => is_a( $product, 'WC_Product' ) ? $product->get_id() : 0 ) );
@@ -236,6 +248,19 @@ final class Kitmage_Addon_Manager {
 
 
 
+	/** Respect Tagmonster's visitor-specific single-product display decision. */
+	private function tagmonster_suppresses_product_form( $product ) {
+		if ( is_admin() || ! function_exists( 'is_product' ) || ! is_product()
+			|| ! is_a( $product, 'WC_Product' )
+			|| (int) $product->get_id() !== (int) get_queried_object_id()
+			|| ! function_exists( 'kitmage_fluentcrm_tagger_restricted_product_rule' ) ) {
+			return false;
+		}
+
+		// Do not cache this result: URL/button actions can change the contact's tags.
+		return null !== kitmage_fluentcrm_tagger_restricted_product_rule( $product->get_id() );
+	}
+
 	private function get_simple_add_to_cart_fallback_html( $product ) {
 		ob_start();
 		$this->render_simple_add_to_cart_fallback( $product );
@@ -243,6 +268,10 @@ final class Kitmage_Addon_Manager {
 	}
 
 	private function render_simple_add_to_cart_fallback( $product ) {
+		if ( $this->tagmonster_suppresses_product_form( $product ) ) {
+			return;
+		}
+
 		if ( ! $product->is_type( array( 'simple', 'subscription' ) ) || ! $product->is_in_stock() ) {
 			return;
 		}
@@ -445,3 +474,4 @@ final class Kitmage_Addon_Manager {
 }
 
 add_action( 'plugins_loaded', array( 'Kitmage_Addon_Manager', 'instance' ) );
+
