@@ -101,6 +101,20 @@ in place and the configured message is displayed.
 
 ## Rule behavior
 
+### Tagmonster compatibility (1.0.4)
+
+On the current single-product page, KitMage FluentCRM Tagmonster's product tag
+rule takes precedence over Add-on Manager's form restoration. If Tagmonster
+replaces the purchase form with its message for the current visitor, Add-on
+Manager does not render an additional form or append its Elementor fallback.
+Visitors allowed by Tagmonster retain the existing cart-based Memberships
+override. With Tagmonster inactive, Add-on Manager behaves as before.
+
+This integration respects Tagmonster's display-only scope; it does not add a
+cart or checkout restriction or change the Memberships purchasability filters.
+
+## Rule details
+
 - A tag can be used in more than one rule.
 - A rule can contain multiple qualifying IDs; any one matching cart item is
   sufficient.
@@ -198,3 +212,4 @@ Kitmage Add-on Manager is maintained by [Mike@KitMage](http://kitmage.com).
 When reporting an issue, include the WordPress, WooCommerce, and Memberships
 versions; the affected product type; sanitized rule configuration; and relevant
 `kitmage-addon-manager` log entries.
+
